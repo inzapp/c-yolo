@@ -24,7 +24,7 @@ Then, it will be the same as normal YOLO.
 
 The loss function of Darknet YOLO is shown below.
 
-(YOLO loss photo)
+<img src="/md/yolo_loss.jpg" width="550">
 
 Propagate the gradient as it is for the loss to the object.
 
