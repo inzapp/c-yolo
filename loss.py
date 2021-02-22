@@ -76,7 +76,7 @@ class ConfidenceWithBoundingBoxLoss(tf.keras.losses.Loss):
         To avoid dividing by zero when going through the derivative formula of sqrt,
         Adds the eps value to the sqrt parameter.
         
-        Derivative of sqrt : 1 / 2 * sqrt(x)
+        Derivative of sqrt : 1 / (2 * sqrt(x))
         """
         w_true = tf.sqrt(y_true[:, :, :, 3] + 1e-4)
         w_pred = tf.sqrt(y_pred[:, :, :, 3] + 1e-4)
