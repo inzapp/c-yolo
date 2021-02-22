@@ -293,6 +293,9 @@ class Yolo:
             cv2.imshow('res', boxed_image)
             cv2.waitKey(0)
 
+    def get_input_shape(self):
+        return self.__model.input_shape
+
     def __training_view(self, batch, logs):
         """
         Training callback function.
