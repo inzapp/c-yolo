@@ -89,13 +89,17 @@ class ConfidenceWithBoundingBoxLoss(tf.keras.losses.Loss):
 
 
 class YoloLoss(tf.keras.losses.Loss):
-    def __init__(self):
+    def __init__(self, coord=5.0):
+        """
+        :param coord: coord value of bounding box loss. 5.0 is recommendation value in yolo paper.
+        """
+        self.coord = coord
         super(YoloLoss, self).__init__()
 
     def call(self, y_true, y_pred):
         y_pred = convert_to_tensor_v2(y_pred)
         y_true = tf.cast(y_true, y_pred.dtype)
-        confidence_bbox_loss = ConfidenceWithBoundingBoxLoss()(y_true, y_pred)
+        confidence_bbox_loss = ConfidenceWithBoundingBoxLoss(coord=self.coord)(y_true, y_pred)
 
         """
         SSE at all classification
