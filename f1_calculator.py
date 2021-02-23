@@ -59,8 +59,14 @@ class F1Calculator:
 
         print('\n\ntotal results')
         results = sorted(results, key=lambda x: x['score'])
+        total_result_str = ''
         for cur_result in results:
-            print(f'score : {cur_result["score"]}, model_path : {cur_result["model_path"]}')
+            cur_result_str = f'score : {cur_result["score"]:.4f}, model_path : {cur_result["model_path"]}'
+            total_result_str += cur_result_str + '\n'
+            print(cur_result_str)
+
+        with open('f1_result.txt', mode='wt') as f:
+            f.write(total_result_str)
 
     @staticmethod
     def __load_label(path):
@@ -78,7 +84,7 @@ class F1Calculator:
         tp = 0
         for i in range(len(y_true)):
             for j in range(len(y_pred)):
-                if y_pred[j]['discard']:
+                if y_pred[j]['discard'] or y_true[i]['class'] != y_pred[j]['class']:
                     continue
                 if self.__iou(y_true[i]['bbox'], y_pred[j]['bbox']) > self.__iou_threshold:
                     y_true[i]['discard'] = True
