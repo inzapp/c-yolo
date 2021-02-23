@@ -54,7 +54,7 @@ Curriculum YOLO conducts training by dividing the loss function into three types
 
 ### Confidence loss
 
-<img src="/md/confidence_loss.jpg" width="350">
+<img src="/md/confidence_loss.jpg" width="200">
 
 ### Confidence with bounding box loss
 
