@@ -16,8 +16,7 @@ class F1Calculator:
         self.__pool = ThreadPoolExecutor(16)
 
     def calculate(self):
-        max_f1 = 0.0
-        max_f1_model_path = ''
+        results = []
         for cur_model_path in self.__model_paths:
             cur_model_path = cur_model_path.replace('\\', '/')
             model = Yolo(pretrained_model_path=cur_model_path)
@@ -53,12 +52,15 @@ class F1Calculator:
                 f1_score = self.__calculate_iou_f1_score(y_true, y_pred)
                 f1_score_sum += f1_score
             avg_f1_score = f1_score_sum / len(self.__image_paths)
-            if avg_f1_score > max_f1:
-                max_f1 = avg_f1_score
-                max_f1_model_path = cur_model_path
+            results.append({
+                'score': avg_f1_score,
+                'model_path': cur_model_path})
             print(f'\nf1 : {avg_f1_score:.4f} model path : {cur_model_path}')
-        print(f'\n\nbest f1 score : {max_f1:.4f}')
-        print(f'model path :  {max_f1_model_path}')
+
+        print('\n\ntotal results')
+        results = sorted(results, key=lambda x: x['score'])
+        for cur_result in results:
+            print(f'score : {cur_result["score"]}, model_path : {cur_result["model_path"]}')
 
     @staticmethod
     def __load_label(path):
