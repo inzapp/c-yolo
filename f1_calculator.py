@@ -1,4 +1,5 @@
 import os
+from concurrent.futures.thread import ThreadPoolExecutor
 
 from cv2 import cv2
 from tqdm import tqdm
@@ -12,20 +13,29 @@ class F1Calculator:
         self.__image_paths = image_paths
         self.__iou_threshold = iou_threshold
         self.__confidence_threshold = confidence_threshold
+        self.__pool = ThreadPoolExecutor(16)
 
     def calculate(self):
+        max_f1 = 0.0
+        max_f1_model_path = ''
         for cur_model_path in self.__model_paths:
             cur_model_path = cur_model_path.replace('\\', '/')
             model = Yolo(pretrained_model_path=cur_model_path)
             input_shape = model.get_input_shape()
             f1_score_sum = 0.0
-            for cur_image_path in tqdm(self.__image_paths):
-                label_path = f'{cur_image_path[:-4]}.txt'
-                if not (os.path.exists(label_path) and os.path.isfile(label_path)):
-                    continue
-                with open(label_path, 'rt') as f:
-                    label_lines = f.readlines()
-                img = cv2.imread(cur_image_path, cv2.IMREAD_GRAYSCALE if input_shape[-1] == 1 else cv2.IMREAD_COLOR)
+
+            label_fs = []
+            for path in self.__image_paths:
+                label_fs.append(self.__pool.submit(self.__load_label, path))
+
+            img_fs = []
+            for f in label_fs:
+                path, label_lines = f.result()
+                if path is not None:
+                    img_fs.append(self.__pool.submit(self.__load_img, path, input_shape[-1], label_lines))
+
+            for f in tqdm(img_fs):
+                img, label_lines = f.result()
                 raw_height, raw_width = img.shape[0], img.shape[1]
                 y_true = []
                 for label_line in label_lines:
@@ -43,7 +53,24 @@ class F1Calculator:
                 f1_score = self.__calculate_iou_f1_score(y_true, y_pred)
                 f1_score_sum += f1_score
             avg_f1_score = f1_score_sum / len(self.__image_paths)
+            if avg_f1_score > max_f1:
+                max_f1 = avg_f1_score
+                max_f1_model_path = cur_model_path
             print(f'\nf1 : {avg_f1_score:.4f} model path : {cur_model_path}')
+        print(f'\n\nbest f1 score : {max_f1:.4f}')
+        print(f'model path :  {max_f1_model_path}')
+
+    @staticmethod
+    def __load_label(path):
+        label_path = f'{path[:-4]}.txt'
+        if not (os.path.exists(label_path) and os.path.isfile(label_path)):
+            return None, None
+        with open(label_path, 'rt') as f:
+            return path, f.readlines()
+
+    @staticmethod
+    def __load_img(path, channels, label_lines):
+        return cv2.imread(path, cv2.IMREAD_GRAYSCALE if channels == 1 else cv2.IMREAD_COLOR), label_lines
 
     def __calculate_iou_f1_score(self, y_true, y_pred):
         tp = 0
