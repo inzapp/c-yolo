@@ -74,7 +74,10 @@ class F1Calculator:
         if not (os.path.exists(label_path) and os.path.isfile(label_path)):
             return None, None
         with open(label_path, 'rt') as f:
-            return path, f.readlines()
+            label_lines = f.readlines()
+        if len(label_lines) == 0:
+            return None, None
+        return path, label_lines
 
     @staticmethod
     def __load_img(path, channels, label_lines):
