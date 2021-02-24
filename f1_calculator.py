@@ -135,10 +135,10 @@ class F1Calculator:
         b_x_min, b_y_min, b_x_max, b_y_max = b
         intersection_width = min(a_x_max, b_x_max) - max(a_x_min, b_x_min)
         intersection_height = min(a_y_max, b_y_max) - max(a_y_min, b_y_min)
-        if intersection_width < 0.0 or intersection_height < 0.0:
+        if intersection_width <= 0 or intersection_height <= 0:
             return 0.0
         intersection_area = intersection_width * intersection_height
         a_area = abs((a_x_max - a_x_min) * (a_y_max - a_y_min))
         b_area = abs((b_x_max - b_x_min) * (b_y_max - b_y_min))
         union_area = a_area + b_area - intersection_area
-        return intersection_area / float(union_area)
+        return intersection_area / (float(union_area) + 1e-5)
