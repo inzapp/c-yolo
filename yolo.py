@@ -45,6 +45,8 @@ class Yolo:
                 monitor='val_f1',
                 mode='max',
                 save_best_only=True)]
+        if not (os.path.exists('checkpoints') and os.path.isdir('checkpoints')):
+            os.makedirs('checkpoints', exist_ok=True)
 
         if os.path.exists(pretrained_model_path) and os.path.isfile(pretrained_model_path):
             self.__class_names, _ = self.__init_class_names(class_names_file_path)
