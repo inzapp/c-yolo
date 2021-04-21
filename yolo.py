@@ -23,6 +23,7 @@ from time import time
 import numpy as np
 import tensorflow as tf
 from cv2 import cv2
+from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 from box_colors import colors
 from generator import YoloDataGenerator
@@ -61,7 +62,8 @@ class Yolo:
             curriculum_epochs=5,
             validation_split=0.0,
             validation_image_path='',
-            training_view=True):
+            training_view=False,
+            mixed_float16_training=False):
         num_classes = 0
         self.__input_shape = input_shape
         if len(self.__class_names) == 0:
@@ -70,6 +72,7 @@ class Yolo:
             self.__model = Model(input_shape, num_classes + 5).build()
         if training_view:
             self.__callbacks += [tf.keras.callbacks.LambdaCallback(on_batch_end=self.__training_view)]
+
         self.__model.summary()
         self.__train_data_generator = YoloDataGenerator(
             train_image_path=train_image_path,
@@ -78,14 +81,20 @@ class Yolo:
             batch_size=batch_size,
             validation_split=validation_split)
 
+        if mixed_float16_training:
+            mixed_precision.set_policy(mixed_precision.Policy('mixed_float16'))
+
         if curriculum_epochs > 0:
             print('\nstart curriculum train')
             tmp_model_name = '__tmp_model.h5'
             """
             Confidence curriculum training
             """
+            optimizer = tf.keras.optimizers.Adam(lr=lr)
+            if mixed_float16_training:
+                optimizer = mixed_precision.LossScaleOptimizer(optimizer=optimizer, loss_scale='dynamic')
             self.__model.compile(
-                optimizer=tf.keras.optimizers.Adam(lr=lr),
+                optimizer=optimizer,
                 loss=ConfidenceLoss())
             self.__model.fit(
                 x=self.__train_data_generator.flow(),
@@ -98,8 +107,11 @@ class Yolo:
             """
             Confidence and bbox curriculum training
             """
+            optimizer = tf.keras.optimizers.Adam(lr=lr)
+            if mixed_float16_training:
+                optimizer = mixed_precision.LossScaleOptimizer(optimizer=optimizer, loss_scale='dynamic')
             self.__model.compile(
-                optimizer=tf.keras.optimizers.Adam(lr=lr),
+                optimizer=optimizer,
                 loss=ConfidenceWithBoundingBoxLoss())
             self.__model.fit(
                 x=self.__train_data_generator.flow(),
@@ -109,8 +121,11 @@ class Yolo:
             self.__model = tf.keras.models.load_model(tmp_model_name, compile=False)
             os.remove(tmp_model_name)
 
+        optimizer = tf.keras.optimizers.Adam(lr=lr)
+        if mixed_float16_training:
+            optimizer = mixed_precision.LossScaleOptimizer(optimizer=optimizer, loss_scale='dynamic')
         self.__model.compile(
-            optimizer=tf.keras.optimizers.Adam(lr=lr),
+            optimizer=optimizer,
             loss=YoloLoss(),
             metrics=[precision, recall, f1])
         print(f'\ntrain on {len(self.__train_data_generator.train_image_paths)} samples.')
