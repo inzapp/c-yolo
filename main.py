@@ -58,6 +58,7 @@ if __name__ == '__main__':
     model = Yolo()
     model.fit(
         train_image_path=r'C:\inz\train_data\coco_2017',
+        model_name='coco_2017_416_416_3',
         input_shape=(416, 416, 3),
         batch_size=2,
         lr=1e-3,
