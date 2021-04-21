@@ -63,8 +63,9 @@ if __name__ == '__main__':
         batch_size=2,
         lr=1e-3,
         epochs=1000,
-        curriculum_epochs=10,
+        curriculum_epochs=1,
         validation_split=0.2,
         training_view=True,
-        mixed_float16_training=True)
+        mixed_float16_training=True,
+        use_map_callback=True)
     model.evaluate()
