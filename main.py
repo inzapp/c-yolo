@@ -54,6 +54,13 @@ if __name__ == '__main__':
     training_view:
         During training, the image is forwarded in real time, showing the results are shown.
         False if training is on a server system without IO equipment.
+        
+    mixed_float16_training:
+        Train faster and consume less memory using both 32bit and 16bit floating point types during training.
+        
+    use_map_callback:
+        It behaves similarly to ModelCheckpoint callback,
+        but it stores models with higher mAP value by calculating the mAP of the validation data per each epoch.
     """
     model = Yolo()
     model.fit(
